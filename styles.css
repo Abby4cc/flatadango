@@ -1,0 +1,54 @@
+.container {
+    display: flex;
+}
+
+#films {
+    width: 250px;
+    padding: 10px;
+    border-right: 1px solid #ccc;
+}
+
+#movie-details {
+    flex: 1;
+    padding: 20px;
+}
+
+#films h1, #films h2 {
+    text-align: center;
+}
+
+#films ul {
+    list-style: none;
+    padding: 0;
+}
+
+#films li {
+    padding: 5px;
+    cursor: pointer;
+}
+
+#films li.sold-out {
+    color: red;
+    text-decoration: line-through;
+}
+
+#movie-poster {
+    max-width: 200px;
+}
+
+#buy-ticket {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#buy-ticket:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+#movie-description {
+    max-width: 400px;
+}
