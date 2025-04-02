@@ -1,86 +1,59 @@
-document.addEventListener('DOMContentLoaded', () => {
-    fetchFirstMovie();
-    fetchAllMovies();
-});
+document.addEventListener("DOMContentLoaded", () => {
+    const filmsList = document.getElementById("films");
+    const poster = document.getElementById("poster");
+    const title = document.getElementById("title");
+    const runtime = document.getElementById("runtime");
+    const description = document.getElementById("description");
+    const showtime = document.getElementById("showtime");
+    const availableTickets = document.getElementById("available-tickets");
+    const buyTicketBtn = document.getElementById("buy-ticket");
 
-function fetchFirstMovie() {
-    fetch('http://localhost:3000/films/1')
-        .then(response => response.json())
-        .then(movie => {
-            displayMovieDetails(movie);
-        });
-}
-
-function fetchAllMovies() {
-    fetch('http://localhost:3000/films')
-        .then(response => response.json())
-        .then(movies => {
-            displayMoviesList(movies);
-        });
-}
-
-function displayMovieDetails(movie) {
-    const availableTickets = movie.capacity - movie.tickets_sold;
-    document.getElementById('movie-title').innerText = movie.title;
-    document.getElementById('movie-poster').src = movie.poster;
-    document.getElementById('movie-runtime').innerText = `Runtime: ${movie.runtime} minutes`;
-    document.getElementById('movie-showtime').innerText = `Showtime: ${movie.showtime}`;
-    document.getElementById('available-tickets').innerText = `Available Tickets: ${availableTickets}`;
-    
-    const buyTicketButton = document.getElementById('buy-ticket');
-    buyTicketButton.disabled = availableTickets <= 0;
-    buyTicketButton.innerText = availableTickets > 0 ? 'Buy Ticket' : 'Sold Out';
-
-    buyTicketButton.onclick = () => {
-        if (availableTickets > 0) {
-            buyTicket(movie.id, availableTickets);
-        }
-    };
-}
-
-function displayMoviesList(movies) {
-    const filmsList = document.getElementById('films');
-    filmsList.innerHTML = '';
-    movies.forEach(movie => {
-        const li = document.createElement('li');
-        li.className = 'film item';
-        li.innerText = movie.title;
-
-        const deleteButton = document.createElement('button');
-        deleteButton.innerText = 'Delete';
-        deleteButton.onclick = () => deleteFilm(movie.id);
-        li.appendChild(deleteButton);
-
-        filmsList.appendChild(li);
-    });
-}
-
-function buyTicket(movieId, availableTickets) {
-    fetch(`http://localhost:3000/films/${movieId}`)
-        .then(response => response.json())
-        .then(movie => {
-            const newTicketsSold = movie.tickets_sold + 1;
-
-            fetch(`http://localhost:3000/films/${movieId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ tickets_sold: newTicketsSold })
-            })
+    function fetchMovies() {
+        fetch("http://localhost:3000/films")
             .then(response => response.json())
-            .then(updatedMovie => {
-                displayMovieDetails(updatedMovie);
-                fetchAllMovies();
+            .then(movies => {
+                filmsList.innerHTML = "";
+                movies.forEach(movie => {
+                    const listItem = document.createElement("li");
+                    listItem.textContent = movie.title;
+                    listItem.classList.add("film", "item");
+                    listItem.addEventListener("click", () => displayMovieDetails(movie));
+                    filmsList.appendChild(listItem);
+                });
+                if (movies.length > 0) {
+                    displayMovieDetails(movies[0]);
+                }
             });
-        });
-}
+    }
 
-function deleteFilm(movieId) {
-    fetch(`http://localhost:3000/films/${movieId}`, {
-        method: 'DELETE'
-    })
-    .then(() => {
-        fetchAllMovies();
-    });
-}
+    function displayMovieDetails(movie) {
+        poster.src = movie.poster;
+        title.textContent = movie.title;
+        runtime.textContent = movie.runtime;
+        description.textContent = movie.description;
+        showtime.textContent = movie.showtime;
+        updateAvailableTickets(movie);
+        buyTicketBtn.onclick = () => buyTicket(movie);
+    }
+
+    function updateAvailableTickets(movie) {
+        const remainingTickets = movie.capacity - movie.tickets_sold;
+        availableTickets.textContent = remainingTickets;
+        buyTicketBtn.textContent = remainingTickets > 0 ? "Buy Ticket" : "Sold Out";
+        buyTicketBtn.disabled = remainingTickets <= 0;
+    }
+
+    function buyTicket(movie) {
+        if (movie.capacity - movie.tickets_sold > 0) {
+            movie.tickets_sold++;
+            fetch(`http://localhost:3000/films/${movie.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tickets_sold: movie.tickets_sold })
+            })
+            .then(() => updateAvailableTickets(movie));
+        }
+    }
+
+    fetchMovies();
+});
